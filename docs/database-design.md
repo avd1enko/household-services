@@ -101,4 +101,4 @@
 
 ## IDEF1X-диаграмма
 
-![IDEF1X diagram](idef1x.jpg)
+![IDEF1X diagram](IDEF1X.jpg)
