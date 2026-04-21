@@ -5,3 +5,4 @@ obj/
 .DS_Store
 *.user
 *.suo
+HouseholdServices.API/appsettings.Development.json
