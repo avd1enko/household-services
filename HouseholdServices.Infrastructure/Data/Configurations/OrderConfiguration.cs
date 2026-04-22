@@ -28,6 +28,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnType("numeric(10,2)")
             .IsRequired();
 
+        builder.Property(order => order.InitialMeetingAt)
+            .HasColumnName("initial_meeting_at")
+            .IsRequired();
+
         builder.Property(order => order.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();
