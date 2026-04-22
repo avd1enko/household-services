@@ -10,8 +10,13 @@ public class HouseholdServicesDbContext : DbContext
         : base(options)
     {
     }
-
-    public DbSet<User> Users { get; set; }
+    
+    public DbSet<User> Users { get; set; } // по смыслу соответствует таблицам users (набор сущностей users, который маппится на таблицу users)
+    public DbSet<Role> Roles { get; set; } 
+    public DbSet<ResponseStatus> ResponseStatuses { get; set; }
+    public DbSet<RequestStatus> RequestStatuses { get; set; }
+    public DbSet<OrderStatus> OrderStatuses { get; set; }
+    public DbSet<ServiceCategory> ServiceCategories { get; set; }
     public DbSet<Request> Requests { get; set; }
     public DbSet<Response> Responses { get; set; }
     public DbSet<Order> Orders { get; set; }
