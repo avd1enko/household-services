@@ -10,8 +10,12 @@ public class HouseholdServicesDbContext : DbContext
         : base(options)
     {
     }
-    
-    public DbSet<User> Users { get; set; } // по смыслу соответствует таблицам users (набор сущностей users, который маппится на таблицу users)
+
+    public DbSet<User> Users { get; set; }
+    public DbSet<Request> Requests { get; set; }
+    public DbSet<Response> Responses { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<Review> Reviews { get; set; }
 
     // метод, где EF Core собирает модель бд. Здесь фреймворк понимает какие есть сущности и какие их атрибуты/ограничения и тд
     // протектед так как переопределяем протектед метод
