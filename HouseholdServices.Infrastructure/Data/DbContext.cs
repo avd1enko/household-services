@@ -12,6 +12,12 @@ public class HouseholdServicesDbContext : DbContext
     }
     
     public DbSet<User> Users { get; set; } // по смыслу соответствует таблицам users (набор сущностей users, который маппится на таблицу users)
+    public DbSet<Role> Roles { get; set; } 
+    public DbSet<ResponseStatus> ResponseStatuses { get; set; }
+    public DbSet<RequestStatus> RequestStatuses { get; set; }
+    public DbSet<OrderStatus> OrderStatuses { get; set; }
+    public DbSet<ServiceCategory> ServiceCategories { get; set; }
+    
 
     // метод, где EF Core собирает модель бд. Здесь фреймворк понимает какие есть сущности и какие их атрибуты/ограничения и тд
     // протектед так как переопределяем протектед метод
