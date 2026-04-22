@@ -12,6 +12,8 @@ public class UserConfiguration: IEntityTypeConfiguration<User>
         builder.ToTable("users");
 
         // задаем как ключ
+        // аргумент лямбда функции явно типа User так как тот тип задан в билдере
+        // => это лямбда оператор (возьми аргумент слева и сделай с ним то, что справа)
         builder.HasKey(user => user.UserId);
 
         builder.Property(user => user.UserId)
