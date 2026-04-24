@@ -11,11 +11,11 @@
 ## Технологический стек
 
 - **Язык программирования:** `C#`
-- **Версия платформы:** .NET 10.0
-- **Backend:** `ASP.NET`
-- **Frontend:** TBD
+- **Версия платформы:** `.NET 10.0`
+- **Backend:** `ASP.NET Core Web API`
+- **Frontend:** `Web UI`
 - **ORM:** `Entity Framework Core`
-- **СУБД:** PostgreSQL
+- **СУБД:** `PostgreSQL`
 
 ## Состав команды
 
