@@ -13,10 +13,10 @@ public class RoleConfiguration: IEntityTypeConfiguration<Role>
         builder.HasKey(role => role.RoleId);
         
         builder.Property(role => role.RoleId)
-            .HasColumnName("RoleId");
+            .HasColumnName("role_id");
         
         builder.Property(role => role.Name)
-            .HasColumnName("Name")
+            .HasColumnName("name")
             .IsRequired()
             .HasMaxLength(50);
         
