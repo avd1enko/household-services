@@ -9,6 +9,7 @@ public class Order
     public DateTime InitialMeetingAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+    // navigation property на одну сущнсть (один к одному)
     public Response Response { get; set; } = null!;
     public Review? Review { get; set; }
 }
