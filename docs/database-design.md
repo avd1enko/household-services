@@ -51,7 +51,7 @@
     `(order_status_id (pk), name (unique))`
 
 12. **Orders**  
-    `(order_id (pk), response_id (fk), order_status_id (fk), price, created_at, completed_at)`
+    `(order_id (pk), response_id (fk), order_status_id (fk), price, created_at, completed_at, initial_meeting_at)`
 
 13. **Reviews**  
     `(review_id (pk), order_id (fk, unique), rating, comment, created_at)`

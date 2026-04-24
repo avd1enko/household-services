@@ -9,4 +9,8 @@ public class User
     public string LastName { get; set; } = null!;
     public string Phone { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
+    
+    // navigation property на множесто сущнстей (один ко многим)
+    public ICollection<Request> ClientRequests { get; set; } = new List<Request>();
+    public ICollection<Response> MasterResponses { get; set; } = new List<Response>();
 }
