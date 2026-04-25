@@ -17,6 +17,9 @@ public class HouseholdServicesDbContext : DbContext
     public DbSet<RequestStatus> RequestStatuses { get; set; }
     public DbSet<OrderStatus> OrderStatuses { get; set; }
     public DbSet<ServiceCategory> ServiceCategories { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<MasterProfile> MasterProfiles { get; set; }
+    public DbSet<MasterCategory> MasterCategories { get; set; }
     public DbSet<Request> Requests { get; set; }
     public DbSet<Response> Responses { get; set; }
     public DbSet<Order> Orders { get; set; }
