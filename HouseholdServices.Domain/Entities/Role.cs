@@ -4,7 +4,7 @@ public class Role
 {
     public int RoleId { get; set; }
     public string Name { get; set; } = null!;
-    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>(); // у роли есть список пользователей, которым она назначена
 }
 
 

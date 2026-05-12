@@ -1,10 +1,55 @@
+using HouseholdServices.Application.Services.Auth;
 using Microsoft.EntityFrameworkCore;
 using HouseholdServices.Infrastructure.Data;
+using HouseholdServices.Infrastructure.Services.Auth;
+using HouseholdServices.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using HouseholdServices.Application.Services.Users;
+using HouseholdServices.Infrastructure.Services.Users;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IAuthService, AuthService>(); // когда где-то просят IAuthService - создай AuthService и передай его туда
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// настройка JWT
+
+string jwtKey = builder.Configuration["Jwt:Key"]!;
+string jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
+string jwtAudience = builder.Configuration["Jwt:Audience"]!;
+
+builder.Services
+
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+
+    .AddJwtBearer(options =>
+
+    {
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+builder.Services.AddAuthorization();
 
 // наш контекст работы с бд, настраиваемый в HouseholdServices.Infrastructure.data. ПОдключение к postgresql
 // будем использовать через dependency injection
@@ -29,6 +74,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapControllers();
 
