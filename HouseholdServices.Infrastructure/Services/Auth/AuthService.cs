@@ -11,11 +11,13 @@ public class AuthService : IAuthService
 {
     private readonly HouseholdServicesDbContext _dbContext;
     private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IJwtTokenService _jwtTokenService;
 
-    public AuthService(HouseholdServicesDbContext dbContext, IPasswordHasher<User> passwordHasher)
+    public AuthService(HouseholdServicesDbContext dbContext, IPasswordHasher<User> passwordHasher, IJwtTokenService jwtTokenService)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
+        _jwtTokenService = jwtTokenService;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -62,15 +64,13 @@ public class AuthService : IAuthService
         };
         _dbContext.UserRoles.Add(userRole);
         await _dbContext.SaveChangesAsync();
-
-
-        // ПОЗЖЕ ЗАМЕНИТЬ НА JWT
+        
         return new AuthResponse
         {
             UserId = user.UserId,
             Login = user.Login,
             Role = role.Name,
-            Token = "temporary-token"
+            Token = _jwtTokenService.GenerateJwtToken(user, role.Name)
         };
     }
 
@@ -104,14 +104,7 @@ public class AuthService : IAuthService
             UserId = user.UserId,
             Login = user.Login,
             Role = userRole.Role.Name,
-            Token = "temporary-token"
+            Token = _jwtTokenService.GenerateJwtToken(user, userRole.Role.Name)
         };
     }
 }
-/* 1. Найти пользователя по request.Login
-2. Если пользователь не найден — ошибка
-3. Проверить request.Password против user.PasswordHash
-4. Если пароль неверный — ошибка
-5. Получить роль пользователя
-6. Вернуть AuthResponse
-7. Позже заменить temporary-token на JWT */
