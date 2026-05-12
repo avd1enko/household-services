@@ -1,12 +1,16 @@
 using HouseholdServices.Application.Services.Auth;
 using Microsoft.EntityFrameworkCore;
 using HouseholdServices.Infrastructure.Data;
+using HouseholdServices.Infrastructure.Services.Auth;
+using HouseholdServices.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthService, AuthService>(); // когда где-то просят IAuthService - создай AuthService и передай его туда
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // наш контекст работы с бд, настраиваемый в HouseholdServices.Infrastructure.data. ПОдключение к postgresql
 // будем использовать через dependency injection
