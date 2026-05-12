@@ -4,6 +4,7 @@ using HouseholdServices.Infrastructure.Data;
 using HouseholdServices.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity; // для хеширования
+using HouseholdServices.Application.Exceptions.Auth;
 
 namespace HouseholdServices.Infrastructure.Services.Auth;
 
@@ -31,7 +32,7 @@ public class AuthService : IAuthService
         // тип user (в этом случае q для наглядности, берется из того, к чему мы применяем AnyAsync (функция EF core)
 
         if (loginExists)
-            throw new InvalidOperationException("This login has already been taken");
+            throw new LoginAlreadyTakenException();
 
         Role? role =
             await _dbContext.Roles.FirstOrDefaultAsync(role =>
@@ -40,7 +41,7 @@ public class AuthService : IAuthService
         // FirstOrDefault      → обычный синхронный метод, await нельзя (БЛОКИРУЕТ ТЕКУЩИЙ ПОТОК КОДА, ПОКА БД НЕ ОТВЕТИТ)
         // FirstOrDefaultAsync → асинхронный метод EF Core, await можно (НЕ БЛОКИРУЕТ)
         if (role is null)
-            throw new InvalidOperationException("This role does not exist");
+            throw new RoleNotFoundException();
 
         User user = new User
         {
@@ -79,7 +80,7 @@ public class AuthService : IAuthService
         User? user = await _dbContext.Users.FirstOrDefaultAsync(user => user.Login == request.Login);
 
         if (user is null)
-            throw new InvalidOperationException("Incorrect login or password");
+            throw new InvalidCredentialsException();
         
         // встроенный метод для проверки хешированного пароля
         PasswordVerificationResult passwordResult = _passwordHasher.VerifyHashedPassword(
@@ -88,7 +89,7 @@ public class AuthService : IAuthService
             request.Password);
 
         if (passwordResult == PasswordVerificationResult.Failed)
-            throw new InvalidOperationException("Incorrect login or password");
+            throw new InvalidCredentialsException();
         
         UserRole? userRole = await _dbContext.UserRoles
             .Include(userRole => userRole.Role)

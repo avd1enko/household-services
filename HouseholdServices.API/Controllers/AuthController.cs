@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using HouseholdServices.Application.Services.Users;
 using HouseholdServices.Infrastructure.Services.Users;
+using HouseholdServices.Application.Exceptions.Auth;
 
 namespace HouseholdServices.API.Controllers;
 
@@ -22,20 +23,37 @@ public class AuthController : ControllerBase // наследуемся от ба
         _currentUserService = currentUserService;
     }
 
-    [HttpPost("register")] // POST route/register
-    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request) // указываем dtos
+    [HttpPost("register")]
+    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
     {
-        AuthResponse response = await _authService.RegisterAsync(request); // вызываем метод регистрации из сервиса
-        
-        return Ok(response); 
+        try
+        {
+            AuthResponse response = await _authService.RegisterAsync(request);
+            return Created(string.Empty, response);
+        }
+        catch (LoginAlreadyTakenException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (RoleNotFoundException exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
     
     [HttpPost("login")]
+
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
     {
-        AuthResponse response = await _authService.LoginAsync(request);
-        
-        return Ok(response);
+        try
+        {
+            AuthResponse response = await _authService.LoginAsync(request);
+            return Ok(response);
+        }
+        catch (InvalidCredentialsException exception)
+        {
+            return Unauthorized(exception.Message);
+        }
     }
     // временный эндпоинт
     [Authorize]
