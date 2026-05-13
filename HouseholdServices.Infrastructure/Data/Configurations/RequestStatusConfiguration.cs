@@ -21,5 +21,11 @@ public class RequestStatusConfiguration: IEntityTypeConfiguration<RequestStatus>
         
         builder.HasIndex(request => request.Name)
             .IsUnique();
+
+        builder.HasData(
+            new RequestStatus { RequestStatusId = 1, Name = "open" },
+            new RequestStatus { RequestStatusId = 2, Name = "in_progress" },
+            new RequestStatus { RequestStatusId = 3, Name = "completed" },
+            new RequestStatus { RequestStatusId = 4, Name = "cancelled" });
     }
 }

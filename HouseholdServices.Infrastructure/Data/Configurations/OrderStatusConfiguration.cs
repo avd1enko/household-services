@@ -21,5 +21,11 @@ public class OrderStatusConfiguration: IEntityTypeConfiguration<OrderStatus>
         
         builder.HasIndex(order => order.Name)
             .IsUnique();
+
+        builder.HasData(
+            new OrderStatus { OrderStatusId = 1, Name = "created" },
+            new OrderStatus { OrderStatusId = 2, Name = "in_progress" },
+            new OrderStatus { OrderStatusId = 3, Name = "completed" },
+            new OrderStatus { OrderStatusId = 4, Name = "cancelled" });
     }
 }

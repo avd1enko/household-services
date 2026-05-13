@@ -21,5 +21,10 @@ public class ResponseStatusConfiguration: IEntityTypeConfiguration<ResponseStatu
         
         builder.HasIndex(response => response.Name)
             .IsUnique();
+
+        builder.HasData(
+            new ResponseStatus { ResponseStatusId = 1, Name = "pending" },
+            new ResponseStatus { ResponseStatusId = 2, Name = "accepted" },
+            new ResponseStatus { ResponseStatusId = 3, Name = "rejected" });
     }
 }
