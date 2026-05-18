@@ -42,7 +42,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasOne(order => order.Response)
             .WithOne(response => response.Order)
             .HasForeignKey<Order>(order => order.ResponseId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade); // если удалить респонс, то удалится и заказ
 
         builder.HasIndex(order => order.ResponseId)
             .IsUnique();

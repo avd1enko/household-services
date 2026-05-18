@@ -36,7 +36,7 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.HasOne(review => review.Order)
             .WithOne(order => order.Review)
             .HasForeignKey<Review>(review => review.OrderId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade); // если удалить заказ - удалится и отзыв
 
         builder.HasIndex(review => review.OrderId)
             .IsUnique();
