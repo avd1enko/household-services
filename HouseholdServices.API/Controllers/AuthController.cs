@@ -40,9 +40,8 @@ public class AuthController : ControllerBase // наследуемся от ба
             return BadRequest(exception.Message);
         }
     }
-    
-    [HttpPost("login")]
 
+    [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
     {
         try
@@ -55,6 +54,7 @@ public class AuthController : ControllerBase // наследуемся от ба
             return Unauthorized(exception.Message);
         }
     }
+
     // временный эндпоинт
     [Authorize]
     [HttpGet("protected-test")]
@@ -62,7 +62,7 @@ public class AuthController : ControllerBase // наследуемся от ба
     {
         return Ok("You are authorized");
     }
-    
+
     [Authorize]
     [HttpGet("current-user-test")]
     public IActionResult CurrentUserTest()
