@@ -9,8 +9,10 @@ using HouseholdServices.Application.Services.Notification;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using HouseholdServices.Application.Services.Users;
+using HouseholdServices.Application.Services.Responses;
 using HouseholdServices.Infrastructure.Services.Users;
 using HouseholdServices.Infrastructure.Services.Notification;
+using HouseholdServices.Infrastructure.Services.Responses;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IResponseService, ResponseService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
