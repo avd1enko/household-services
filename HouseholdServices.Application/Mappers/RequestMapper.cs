@@ -22,15 +22,22 @@ public static class RequestMapper
         };
     }
 
-    public static RequestResponse ToResponse(this Domain.Entities.Request request, string clientFirstName)
+    public static RequestResponse ToResponse(
+        this Domain.Entities.Request request,
+        string clientFirstName,
+        string clientLastName,
+        string categoryName,
+        string status)
     {
         return new RequestResponse
         {
             RequestId = request.RequestId,
             ClientId = request.ClientId,
             ClientFirstName = clientFirstName,
+            ClientLastName = clientLastName,
             CategoryId = request.CategoryId,
-            RequestStatusId = request.RequestStatusId,
+            CategoryName = categoryName,
+            Status = status,
             Title = request.Title,
             Description = request.Description,
             Address = request.Address,
@@ -41,13 +48,16 @@ public static class RequestMapper
 
     public static UserRequestListItemResponse ToUserListItem(
         this Domain.Entities.Request request,
-        string categoryName)
+        string categoryName,
+        string status)
     {
         return new UserRequestListItemResponse
         {
             RequestId = request.RequestId,
             CategoryId = request.CategoryId,
             CategoryName = categoryName,
+            Title = request.Title,
+            Status = status,
             DesiredDate = request.DesiredDate,
             CreatedAt = request.CreatedAt
         };
@@ -56,6 +66,7 @@ public static class RequestMapper
     public static AvailableRequestListItemResponse ToAvailableListItem(
         this Domain.Entities.Request request,
         string clientFirstName,
+        string clientLastName,
         string categoryName,
         string status)
     {
@@ -64,6 +75,7 @@ public static class RequestMapper
             RequestId = request.RequestId,
             ClientId = request.ClientId,
             ClientFirstName = clientFirstName,
+            ClientLastName = clientLastName,
             CategoryId = request.CategoryId,
             CategoryName = categoryName,
             Title = request.Title,

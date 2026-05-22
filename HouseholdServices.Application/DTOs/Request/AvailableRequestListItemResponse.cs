@@ -5,6 +5,7 @@ public class AvailableRequestListItemResponse
     public int RequestId { get; set; }
     public int ClientId { get; set; }
     public string ClientFirstName { get; set; } = null!;
+    public string ClientLastName { get; set; } = null!;
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = null!;
     public string Title { get; set; } = null!;

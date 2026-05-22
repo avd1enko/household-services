@@ -5,6 +5,8 @@ public class UserRequestListItemResponse
     public int RequestId { get; set; }
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = null!;
+    public string Title { get; set; } = null!;
+    public string Status { get; set; } = null!;
     public DateTime DesiredDate { get; set; }
     public DateTime CreatedAt { get; set; }
 }

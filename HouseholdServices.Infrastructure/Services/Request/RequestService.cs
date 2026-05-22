@@ -32,10 +32,11 @@ public class RequestService : IRequestService
         if (currentUserRole != ClientRoleName)
             throw new ClientRoleRequiredException();
 
-        bool categoryExists = await _dbContext.ServiceCategories
-            .AnyAsync(category => category.CategoryId == request.CategoryId);
+        ServiceCategory? category = await _dbContext.ServiceCategories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(category => category.CategoryId == request.CategoryId);
 
-        if (!categoryExists)
+        if (category is null)
             throw new CategoryNotFoundException();
 
         RequestStatus? openStatus = await _dbContext.RequestStatuses
@@ -51,9 +52,9 @@ public class RequestService : IRequestService
         _dbContext.Requests.Add(entity);
         await _dbContext.SaveChangesAsync();
 
-        string clientFirstName = await GetUserFirstNameAsync(clientId);
+        (string clientFirstName, string clientLastName) = await GetUserNameAsync(clientId);
 
-        return entity.ToResponse(clientFirstName);
+        return entity.ToResponse(clientFirstName, clientLastName, category.Name, OpenStatusName);
     }
 
     public async Task<RequestResponse> GetByIdAsync(int requestId)
@@ -69,7 +70,34 @@ public class RequestService : IRequestService
         if (!await CanCurrentUserReadAsync(entity))
             throw new RequestAccessDeniedException();
 
-        return entity.ToResponse(entity.Client.FirstName);
+        var requestInfo = await _dbContext.Requests
+            .AsNoTracking()
+            .Where(request => request.RequestId == requestId)
+            .Join(
+                _dbContext.ServiceCategories.AsNoTracking(),
+                request => request.CategoryId,
+                category => category.CategoryId,
+                (request, category) => new
+                {
+                    Request = request,
+                    CategoryName = category.Name
+                })
+            .Join(
+                _dbContext.RequestStatuses.AsNoTracking(),
+                requestInfo => requestInfo.Request.RequestStatusId,
+                status => status.RequestStatusId,
+                (requestInfo, status) => new
+                {
+                    requestInfo.CategoryName,
+                    Status = status.Name
+                })
+            .FirstAsync();
+
+        return entity.ToResponse(
+            entity.Client.FirstName,
+            entity.Client.LastName,
+            requestInfo.CategoryName,
+            requestInfo.Status);
     }
 
     public async Task<List<AvailableRequestListItemResponse>> GetAvailableForCurrentMasterAsync(
@@ -108,7 +136,12 @@ public class RequestService : IRequestService
                 _dbContext.Users.AsNoTracking(),
                 request => request.ClientId,
                 user => user.UserId,
-                (request, user) => new { Request = request, ClientFirstName = user.FirstName })
+                (request, user) => new
+                {
+                    Request = request,
+                    ClientFirstName = user.FirstName,
+                    ClientLastName = user.LastName
+                })
             .Join(
                 _dbContext.ServiceCategories.AsNoTracking(),
                 requestInfo => requestInfo.Request.CategoryId,
@@ -117,6 +150,7 @@ public class RequestService : IRequestService
                 {
                     requestInfo.Request,
                     requestInfo.ClientFirstName,
+                    requestInfo.ClientLastName,
                     CategoryName = category.Name
                 })
             .OrderByDescending(requestInfo => requestInfo.Request.CreatedAt)
@@ -125,6 +159,7 @@ public class RequestService : IRequestService
         return requests
             .Select(requestInfo => requestInfo.Request.ToAvailableListItem(
                 requestInfo.ClientFirstName,
+                requestInfo.ClientLastName,
                 requestInfo.CategoryName,
                 OpenStatusName))
             .ToList();
@@ -155,11 +190,21 @@ public class RequestService : IRequestService
                     Request = request,
                     CategoryName = category.Name
                 })
+            .Join(
+                _dbContext.RequestStatuses.AsNoTracking(),
+                requestInfo => requestInfo.Request.RequestStatusId,
+                status => status.RequestStatusId,
+                (requestInfo, status) => new
+                {
+                    requestInfo.Request,
+                    requestInfo.CategoryName,
+                    Status = status.Name
+                })
             .OrderByDescending(requestInfo => requestInfo.Request.CreatedAt)
             .ToListAsync();
 
         return requests
-            .Select(requestInfo => requestInfo.Request.ToUserListItem(requestInfo.CategoryName))
+            .Select(requestInfo => requestInfo.Request.ToUserListItem(requestInfo.CategoryName, requestInfo.Status))
             .ToList();
     }
 
@@ -261,17 +306,21 @@ public class RequestService : IRequestService
         return false;
     }
 
-    private async Task<string> GetUserFirstNameAsync(int userId)
+    private async Task<(string FirstName, string LastName)> GetUserNameAsync(int userId)
     {
-        string? firstName = await _dbContext.Users
+        var userName = await _dbContext.Users
             .AsNoTracking()
             .Where(user => user.UserId == userId)
-            .Select(user => user.FirstName)
+            .Select(user => new
+            {
+                user.FirstName,
+                user.LastName
+            })
             .FirstOrDefaultAsync();
 
-        if (firstName is null)
+        if (userName is null)
             throw new InvalidOperationException("Current user does not exist");
 
-        return firstName;
+        return (userName.FirstName, userName.LastName);
     }
 }
