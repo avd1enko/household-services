@@ -10,7 +10,12 @@ namespace HouseholdServices.Infrastructure.Services.Responses;
 public class ResponseService : IResponseService
 {
     private const string PendingStatusName = "pending";
+    private const string AcceptedStatusName = "accepted";
+    private const string RejectedStatusName = "rejected";
+    private const string CancelledStatusName = "cancelled";
     private const string OpenRequestStatusName = "open";
+    private const string ClientRoleName = "client";
+    private const string MasterRoleName = "master";
 
     private readonly HouseholdServicesDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
@@ -23,6 +28,9 @@ public class ResponseService : IResponseService
 
     public async Task<ResponseForRequestListItemResponse> CreateAsync(int requestId, CreateResponseRequest request)
     {
+        if (_currentUserService.GetRole() != MasterRoleName)
+            throw new ResponseAccessDeniedException();
+
         if (request.ProposedPrice <= 0)
             throw new InvalidResponsePriceException();
 
@@ -41,6 +49,14 @@ public class ResponseService : IResponseService
 
         if (requestStatus != OpenRequestStatusName)
             throw new RequestNotActiveException();
+
+        bool requestAvailableForMaster = await _dbContext.MasterCategories
+            .AnyAsync(masterCategory =>
+                masterCategory.UserId == masterId &&
+                masterCategory.CategoryId == serviceRequest.CategoryId);
+
+        if (!requestAvailableForMaster)
+            throw new RequestNotAvailableForMasterException();
 
         bool responseExists = await _dbContext.Responses
             .AnyAsync(response => response.RequestId == requestId && response.MasterId == masterId);
@@ -74,10 +90,15 @@ public class ResponseService : IResponseService
 
     public async Task<IReadOnlyCollection<ResponseForRequestListItemResponse>> GetByRequestIdAsync(int requestId)
     {
-        bool requestExists = await _dbContext.Requests
-            .AnyAsync(serviceRequest => serviceRequest.RequestId == requestId);
+        if (_currentUserService.GetRole() != ClientRoleName)
+            throw new ResponseAccessDeniedException();
 
-        if (!requestExists)
+        int clientId = _currentUserService.GetUserId();
+
+        Domain.Entities.Request? serviceRequest = await _dbContext.Requests
+            .FirstOrDefaultAsync(serviceRequest => serviceRequest.RequestId == requestId);
+
+        if (serviceRequest is null || serviceRequest.ClientId != clientId)
             throw new RequestNotFoundException();
 
         return await _dbContext.Responses
@@ -106,6 +127,9 @@ public class ResponseService : IResponseService
 
     public async Task<IReadOnlyCollection<MasterResponseListItemResponse>> GetCurrentMasterResponsesAsync()
     {
+        if (_currentUserService.GetRole() != MasterRoleName)
+            throw new ResponseAccessDeniedException();
+
         int masterId = _currentUserService.GetUserId();
 
         return await _dbContext.Responses
@@ -131,6 +155,68 @@ public class ResponseService : IResponseService
             .ToListAsync();
     }
 
+    public async Task AcceptAsync(int responseId)
+    {
+        if (_currentUserService.GetRole() != ClientRoleName)
+            throw new ResponseAccessDeniedException();
+
+        int clientId = _currentUserService.GetUserId();
+
+        Domain.Entities.Response? response = await _dbContext.Responses
+            .Include(response => response.Request)
+            .FirstOrDefaultAsync(response => response.ResponseId == responseId);
+
+        if (response is null || response.Request.ClientId != clientId)
+            throw new ResponseNotFoundException();
+
+        int pendingStatusId = await GetResponseStatusIdAsync(PendingStatusName);
+        int acceptedStatusId = await GetResponseStatusIdAsync(AcceptedStatusName);
+        int rejectedStatusId = await GetResponseStatusIdAsync(RejectedStatusName);
+
+        if (response.ResponseStatusId != pendingStatusId)
+            throw new ResponseAlreadyProcessedException();
+
+        response.ResponseStatusId = acceptedStatusId;
+
+        List<Domain.Entities.Response> otherResponses = await _dbContext.Responses
+            .Where(otherResponse =>
+                otherResponse.RequestId == response.RequestId &&
+                otherResponse.ResponseId != response.ResponseId &&
+                otherResponse.ResponseStatusId == pendingStatusId)
+            .ToListAsync();
+
+        foreach (Domain.Entities.Response otherResponse in otherResponses)
+        {
+            otherResponse.ResponseStatusId = rejectedStatusId;
+        }
+
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task CancelAsync(int responseId)
+    {
+        if (_currentUserService.GetRole() != MasterRoleName)
+            throw new ResponseAccessDeniedException();
+
+        int masterId = _currentUserService.GetUserId();
+
+        Domain.Entities.Response? response = await _dbContext.Responses
+            .FirstOrDefaultAsync(response => response.ResponseId == responseId);
+
+        if (response is null || response.MasterId != masterId)
+            throw new ResponseNotFoundException();
+
+        int pendingStatusId = await GetResponseStatusIdAsync(PendingStatusName);
+        int cancelledStatusId = await GetResponseStatusIdAsync(CancelledStatusName);
+
+        if (response.ResponseStatusId != pendingStatusId)
+            throw new ResponseAlreadyProcessedException();
+
+        response.ResponseStatusId = cancelledStatusId;
+
+        await _dbContext.SaveChangesAsync();
+    }
+
     private async Task<ResponseForRequestListItemResponse> GetResponseForRequestListItemAsync(int responseId)
     {
         return await _dbContext.Responses
@@ -154,5 +240,18 @@ public class ResponseService : IResponseService
                 MasterExperienceYears = response.Master.MasterProfile == null ? null : response.Master.MasterProfile.ExperienceYears
             })
             .FirstAsync();
+    }
+
+    private async Task<int> GetResponseStatusIdAsync(string statusName)
+    {
+        int statusId = await _dbContext.ResponseStatuses
+            .Where(status => status.Name == statusName)
+            .Select(status => status.ResponseStatusId)
+            .FirstOrDefaultAsync();
+
+        if (statusId == 0)
+            throw new ResponseStatusNotFoundException();
+
+        return statusId;
     }
 }

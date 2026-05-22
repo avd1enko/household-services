@@ -25,6 +25,7 @@ public class ResponseStatusConfiguration: IEntityTypeConfiguration<ResponseStatu
         builder.HasData(
             new ResponseStatus { ResponseStatusId = 1, Name = "pending" },
             new ResponseStatus { ResponseStatusId = 2, Name = "accepted" },
-            new ResponseStatus { ResponseStatusId = 3, Name = "rejected" });
+            new ResponseStatus { ResponseStatusId = 3, Name = "rejected" },
+            new ResponseStatus { ResponseStatusId = 4, Name = "cancelled" });
     }
 }

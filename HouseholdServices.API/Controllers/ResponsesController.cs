@@ -30,6 +30,10 @@ public class ResponsesController : ControllerBase
         {
             return BadRequest(exception.Message);
         }
+        catch (ResponseAccessDeniedException)
+        {
+            return Forbid();
+        }
         catch (RequestNotFoundException exception)
         {
             return NotFound(exception.Message);
@@ -37,6 +41,10 @@ public class ResponsesController : ControllerBase
         catch (RequestNotActiveException exception)
         {
             return BadRequest(exception.Message);
+        }
+        catch (RequestNotAvailableForMasterException exception)
+        {
+            return NotFound(exception.Message);
         }
         catch (ResponseAlreadyExistsException exception)
         {
@@ -48,6 +56,7 @@ public class ResponsesController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "client")]
     [HttpGet("api/requests/{requestId:int}/responses")]
     public async Task<ActionResult<IReadOnlyCollection<ResponseForRequestListItemResponse>>> GetByRequestId(int requestId)
     {
@@ -60,13 +69,78 @@ public class ResponsesController : ControllerBase
         {
             return NotFound(exception.Message);
         }
+        catch (ResponseAccessDeniedException)
+        {
+            return Forbid();
+        }
     }
 
     [Authorize(Roles = "master")]
     [HttpGet("api/masters/me/responses")]
     public async Task<ActionResult<IReadOnlyCollection<MasterResponseListItemResponse>>> GetCurrentMasterResponses()
     {
-        IReadOnlyCollection<MasterResponseListItemResponse> responses = await _responseService.GetCurrentMasterResponsesAsync();
-        return Ok(responses);
+        try
+        {
+            IReadOnlyCollection<MasterResponseListItemResponse> responses = await _responseService.GetCurrentMasterResponsesAsync();
+            return Ok(responses);
+        }
+        catch (ResponseAccessDeniedException)
+        {
+            return Forbid();
+        }
+    }
+
+    [Authorize(Roles = "client")]
+    [HttpPost("api/responses/{responseId:int}/accept")]
+    public async Task<IActionResult> Accept(int responseId)
+    {
+        try
+        {
+            await _responseService.AcceptAsync(responseId);
+            return NoContent();
+        }
+        catch (ResponseAccessDeniedException)
+        {
+            return Forbid();
+        }
+        catch (ResponseNotFoundException exception)
+        {
+            return NotFound(exception.Message);
+        }
+        catch (ResponseAlreadyProcessedException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (ResponseStatusNotFoundException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
+    [Authorize(Roles = "master")]
+    [HttpPost("api/responses/{responseId:int}/cancel")]
+    public async Task<IActionResult> Cancel(int responseId)
+    {
+        try
+        {
+            await _responseService.CancelAsync(responseId);
+            return NoContent();
+        }
+        catch (ResponseAccessDeniedException)
+        {
+            return Forbid();
+        }
+        catch (ResponseNotFoundException exception)
+        {
+            return NotFound(exception.Message);
+        }
+        catch (ResponseAlreadyProcessedException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (ResponseStatusNotFoundException exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 }

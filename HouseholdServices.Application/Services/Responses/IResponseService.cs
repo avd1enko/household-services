@@ -7,4 +7,6 @@ public interface IResponseService
     Task<ResponseForRequestListItemResponse> CreateAsync(int requestId, CreateResponseRequest request);
     Task<IReadOnlyCollection<ResponseForRequestListItemResponse>> GetByRequestIdAsync(int requestId);
     Task<IReadOnlyCollection<MasterResponseListItemResponse>> GetCurrentMasterResponsesAsync();
+    Task AcceptAsync(int responseId);
+    Task CancelAsync(int responseId);
 }
