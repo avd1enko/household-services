@@ -17,11 +17,22 @@ public class RequestsController : ControllerBase
         _requestService = requestService;
     }
 
-    [Authorize(Roles = "client,master")]
+    [Authorize(Roles = "master")]
     [HttpGet]
-    public async Task<ActionResult<List<RequestResponse>>> GetAll([FromQuery] RequestFilterRequest filter)
+    public async Task<ActionResult<List<AvailableRequestListItemResponse>>> GetAvailableForMaster(
+        [FromQuery] RequestFilterRequest filter)
     {
-        List<RequestResponse> response = await _requestService.GetAllAsync(filter);
+        List<AvailableRequestListItemResponse> response =
+            await _requestService.GetAvailableForCurrentMasterAsync(filter);
+        return Ok(response);
+    }
+
+    [Authorize(Roles = "client")]
+    [HttpGet("/api/users/me/requests")]
+    public async Task<ActionResult<List<UserRequestListItemResponse>>> GetCurrentUserRequests(
+        [FromQuery] RequestFilterRequest filter)
+    {
+        List<UserRequestListItemResponse> response = await _requestService.GetCurrentUserRequestsAsync(filter);
         return Ok(response);
     }
 
@@ -40,7 +51,7 @@ public class RequestsController : ControllerBase
         }
         catch (RequestAccessDeniedException exception)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, exception.Message);
+            return NotFound(exception.Message);
         }
     }
 
@@ -60,6 +71,29 @@ public class RequestsController : ControllerBase
         catch (ClientRoleRequiredException exception)
         {
             return StatusCode(StatusCodes.Status403Forbidden, exception.Message);
+        }
+    }
+
+    [Authorize(Roles = "client")]
+    [HttpPatch("{requestId:int}/cancel")]
+    public async Task<IActionResult> Cancel(int requestId)
+    {
+        try
+        {
+            await _requestService.CancelAsync(requestId);
+            return NoContent();
+        }
+        catch (RequestNotFoundException exception)
+        {
+            return NotFound(exception.Message);
+        }
+        catch (RequestAccessDeniedException exception)
+        {
+            return NotFound(exception.Message);
+        }
+        catch (RequestCannotBeCancelledException exception)
+        {
+            return Conflict(exception.Message);
         }
     }
 }

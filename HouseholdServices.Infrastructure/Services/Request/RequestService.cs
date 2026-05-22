@@ -12,6 +12,7 @@ namespace HouseholdServices.Infrastructure.Services.Request;
 public class RequestService : IRequestService
 {
     private const string OpenStatusName = "open";
+    private const string CancelledStatusName = "cancelled";
     private const string ClientRoleName = "client";
     private const string MasterRoleName = "master";
 
@@ -50,13 +51,16 @@ public class RequestService : IRequestService
         _dbContext.Requests.Add(entity);
         await _dbContext.SaveChangesAsync();
 
-        return entity.ToResponse();
+        string clientFirstName = await GetUserFirstNameAsync(clientId);
+
+        return entity.ToResponse(clientFirstName);
     }
 
     public async Task<RequestResponse> GetByIdAsync(int requestId)
     {
         Domain.Entities.Request? entity = await _dbContext.Requests
             .AsNoTracking()
+            .Include(request => request.Client)
             .FirstOrDefaultAsync(request => request.RequestId == requestId);
 
         if (entity is null)
@@ -65,15 +69,141 @@ public class RequestService : IRequestService
         if (!await CanCurrentUserReadAsync(entity))
             throw new RequestAccessDeniedException();
 
-        return entity.ToResponse();
+        return entity.ToResponse(entity.Client.FirstName);
     }
 
-    public async Task<List<RequestResponse>> GetAllAsync(RequestFilterRequest filter)
+    public async Task<List<AvailableRequestListItemResponse>> GetAvailableForCurrentMasterAsync(
+        RequestFilterRequest filter)
     {
-        IQueryable<Domain.Entities.Request> query = _dbContext.Requests
-            .AsNoTracking();
+        string currentUserRole = _currentUserService.GetRole();
 
-        query = await ApplyCurrentUserAccessFilterAsync(query);
+        if (currentUserRole != MasterRoleName)
+            throw new RequestAccessDeniedException();
+
+        int currentUserId = _currentUserService.GetUserId();
+
+        RequestStatus? openStatus = await _dbContext.RequestStatuses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(status => status.Name == OpenStatusName);
+
+        if (openStatus is null)
+            throw new InvalidOperationException("Open request status does not exist");
+
+        List<int> masterCategoryIds = await _dbContext.MasterCategories
+            .AsNoTracking()
+            .Where(masterCategory => masterCategory.UserId == currentUserId)
+            .Select(masterCategory => masterCategory.CategoryId)
+            .ToListAsync();
+
+        IQueryable<Domain.Entities.Request> query = _dbContext.Requests
+            .AsNoTracking()
+            .Where(request =>
+                request.RequestStatusId == openStatus.RequestStatusId &&
+                masterCategoryIds.Contains(request.CategoryId));
+
+        query = ApplyRequestFilters(query, filter);
+
+        var requests = await query
+            .Join(
+                _dbContext.Users.AsNoTracking(),
+                request => request.ClientId,
+                user => user.UserId,
+                (request, user) => new { Request = request, ClientFirstName = user.FirstName })
+            .Join(
+                _dbContext.ServiceCategories.AsNoTracking(),
+                requestInfo => requestInfo.Request.CategoryId,
+                category => category.CategoryId,
+                (requestInfo, category) => new
+                {
+                    requestInfo.Request,
+                    requestInfo.ClientFirstName,
+                    CategoryName = category.Name
+                })
+            .OrderByDescending(requestInfo => requestInfo.Request.CreatedAt)
+            .ToListAsync();
+
+        return requests
+            .Select(requestInfo => requestInfo.Request.ToAvailableListItem(
+                requestInfo.ClientFirstName,
+                requestInfo.CategoryName,
+                OpenStatusName))
+            .ToList();
+    }
+
+    public async Task<List<UserRequestListItemResponse>> GetCurrentUserRequestsAsync(RequestFilterRequest filter)
+    {
+        string currentUserRole = _currentUserService.GetRole();
+
+        if (currentUserRole != ClientRoleName)
+            throw new RequestAccessDeniedException();
+
+        int currentUserId = _currentUserService.GetUserId();
+
+        IQueryable<Domain.Entities.Request> query = _dbContext.Requests
+            .AsNoTracking()
+            .Where(request => request.ClientId == currentUserId);
+
+        query = ApplyRequestFilters(query, filter);
+
+        var requests = await query
+            .Join(
+                _dbContext.ServiceCategories.AsNoTracking(),
+                request => request.CategoryId,
+                category => category.CategoryId,
+                (request, category) => new
+                {
+                    Request = request,
+                    CategoryName = category.Name
+                })
+            .OrderByDescending(requestInfo => requestInfo.Request.CreatedAt)
+            .ToListAsync();
+
+        return requests
+            .Select(requestInfo => requestInfo.Request.ToUserListItem(requestInfo.CategoryName))
+            .ToList();
+    }
+
+    public async Task CancelAsync(int requestId)
+    {
+        string currentUserRole = _currentUserService.GetRole();
+
+        if (currentUserRole != ClientRoleName)
+            throw new RequestAccessDeniedException();
+
+        int currentUserId = _currentUserService.GetUserId();
+
+        Domain.Entities.Request? request = await _dbContext.Requests
+            .FirstOrDefaultAsync(request => request.RequestId == requestId);
+
+        if (request is null)
+            throw new RequestNotFoundException();
+
+        if (request.ClientId != currentUserId)
+            throw new RequestAccessDeniedException();
+
+        RequestStatus? openStatus = await _dbContext.RequestStatuses
+            .FirstOrDefaultAsync(status => status.Name == OpenStatusName);
+
+        if (openStatus is null)
+            throw new InvalidOperationException("Open request status does not exist");
+
+        if (request.RequestStatusId != openStatus.RequestStatusId)
+            throw new RequestCannotBeCancelledException();
+
+        RequestStatus? cancelledStatus = await _dbContext.RequestStatuses
+            .FirstOrDefaultAsync(status => status.Name == CancelledStatusName);
+
+        if (cancelledStatus is null)
+            throw new InvalidOperationException("Cancelled request status does not exist");
+
+        request.RequestStatusId = cancelledStatus.RequestStatusId;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    private static IQueryable<Domain.Entities.Request> ApplyRequestFilters(
+        IQueryable<Domain.Entities.Request> query,
+        RequestFilterRequest filter)
+    {
 
         if (filter.CategoryId.HasValue)
         {
@@ -106,38 +236,7 @@ public class RequestService : IRequestService
             query = query.Where(request => request.Title.ToLower().Contains(title));
         }
 
-        List<Domain.Entities.Request> requests = await query
-            .OrderByDescending(request => request.CreatedAt)
-            .ToListAsync();
-
-        return requests
-            .Select(request => request.ToResponse())
-            .ToList();
-    }
-
-    private async Task<IQueryable<Domain.Entities.Request>> ApplyCurrentUserAccessFilterAsync(
-        IQueryable<Domain.Entities.Request> query)
-    {
-        int currentUserId = _currentUserService.GetUserId();
-        string currentUserRole = _currentUserService.GetRole();
-
-        if (currentUserRole == ClientRoleName)
-        {
-            return query.Where(request => request.ClientId == currentUserId);
-        }
-
-        if (currentUserRole == MasterRoleName)
-        {
-            List<int> masterCategoryIds = await _dbContext.MasterCategories
-                .AsNoTracking()
-                .Where(masterCategory => masterCategory.UserId == currentUserId)
-                .Select(masterCategory => masterCategory.CategoryId)
-                .ToListAsync();
-
-            return query.Where(request => masterCategoryIds.Contains(request.CategoryId));
-        }
-
-        return query.Where(request => false);
+        return query;
     }
 
     private async Task<bool> CanCurrentUserReadAsync(Domain.Entities.Request request)
@@ -160,5 +259,19 @@ public class RequestService : IRequestService
         }
 
         return false;
+    }
+
+    private async Task<string> GetUserFirstNameAsync(int userId)
+    {
+        string? firstName = await _dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.UserId == userId)
+            .Select(user => user.FirstName)
+            .FirstOrDefaultAsync();
+
+        if (firstName is null)
+            throw new InvalidOperationException("Current user does not exist");
+
+        return firstName;
     }
 }
