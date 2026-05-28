@@ -13,6 +13,8 @@ using HouseholdServices.Application.Services.Responses;
 using HouseholdServices.Infrastructure.Services.Users;
 using HouseholdServices.Infrastructure.Services.Notification;
 using HouseholdServices.Infrastructure.Services.Responses;
+using HouseholdServices.Application.Services.Request;
+using HouseholdServices.Infrastructure.Services.Request;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
+builder.Services.AddScoped<IRequestService, RequestService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
