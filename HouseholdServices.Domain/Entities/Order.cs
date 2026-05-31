@@ -6,7 +6,7 @@ public class Order
     public int ResponseId { get; set; }
     public int OrderStatusId { get; set; }
     public decimal Price { get; set; }
-    public DateTime InitialMeetingAt { get; set; }
+    public DateTime? InitialMeetingAt { get; set; } // меняем на nullable потому что по Б-Л это выставляется после согласования
     public DateTime CreatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     // navigation property на одну сущнсть (один к одному)
