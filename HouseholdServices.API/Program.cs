@@ -6,6 +6,7 @@ using HouseholdServices.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
 using HouseholdServices.Application.Services.Notification;
+using HouseholdServices.Application.Services.Order;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using HouseholdServices.Application.Services.Users;
@@ -14,6 +15,7 @@ using HouseholdServices.Infrastructure.Services.Users;
 using HouseholdServices.Infrastructure.Services.Notification;
 using HouseholdServices.Infrastructure.Services.Responses;
 using HouseholdServices.Application.Services.Request;
+using HouseholdServices.Infrastructure.Services.Orders;
 using HouseholdServices.Infrastructure.Services.Request;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +30,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
