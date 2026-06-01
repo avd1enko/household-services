@@ -5,7 +5,7 @@ public class OrderResponse
     public int OrderId { get; set; }
     public string Status { get; set; } = null!;
     public decimal Price { get; set; }
-    public DateTime InitialMeetingAt { get; set; }
+    public DateTime? InitialMeetingAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     
