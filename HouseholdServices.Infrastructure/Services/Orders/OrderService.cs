@@ -145,7 +145,7 @@ public class OrderService : IOrderService
             throw new OrderAccessDeniedException();
         }
 
-        if (order.OrderStatusId != 2)
+        if (order.OrderStatusId != 1) // not in_progress
             throw new OrderCannotBeCompletedException();
 
         order.OrderStatusId = 3;
@@ -174,7 +174,7 @@ public class OrderService : IOrderService
             throw new OrderAccessDeniedException();
         }
 
-        if (order.OrderStatusId != 2) // in_progress
+        if (order.OrderStatusId != 1) // not in_progress
         {
             throw new OrderCannotBeCancelledException();
         }
