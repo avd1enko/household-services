@@ -6,6 +6,7 @@ using HouseholdServices.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using System.Text;
 using HouseholdServices.Application.Services.Notification;
+using HouseholdServices.Application.Services.Order;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using HouseholdServices.Application.Services.Users;
@@ -14,13 +15,41 @@ using HouseholdServices.Infrastructure.Services.Users;
 using HouseholdServices.Infrastructure.Services.Notification;
 using HouseholdServices.Infrastructure.Services.Responses;
 using HouseholdServices.Application.Services.Request;
+using HouseholdServices.Infrastructure.Services.Orders;
 using HouseholdServices.Infrastructure.Services.Request;
+using Microsoft.OpenApi;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Household Services API",
+        Version = "v1"
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token like this: Bearer {your token}"
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+    });
+
+
+});
+
 builder.Services.AddScoped<IAuthService, AuthService>(); // когда где-то просят IAuthService - создай AuthService и передай его туда
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -28,6 +57,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
@@ -80,12 +110,14 @@ var app = builder.Build();
 // статус задается через перременную среды в файле api проекта launchSettings.json в поле "ASPNETCORE_ENVIRONMENT": "Development"
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
 
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "Household Services API");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Household Services API");
     });
+
+
 }
 
 app.UseHttpsRedirection();

@@ -3,6 +3,7 @@ using System;
 using HouseholdServices.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HouseholdServices.Infrastructure.Migrations
 {
     [DbContext(typeof(HouseholdServicesDbContext))]
-    partial class HouseholdServicesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601105058_AddOrdersView")]
+    partial class AddOrdersView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -141,87 +144,6 @@ namespace HouseholdServices.Infrastructure.Migrations
                             OrderStatusId = 3,
                             Name = "cancelled"
                         });
-                });
-
-            modelBuilder.Entity("HouseholdServices.Domain.Entities.OrderView", b =>
-                {
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ClientFirstName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("ClientId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ClientLastName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ClientPhone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("DesiredDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("InitialMeetingAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("MasterFirstName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("MasterId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("MasterLastName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MasterPhone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("RequestAddress")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RequestDescription")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("RequestId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RequestTitle")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("order_details_view", (string)null);
                 });
 
             modelBuilder.Entity("HouseholdServices.Domain.Entities.Request", b =>
