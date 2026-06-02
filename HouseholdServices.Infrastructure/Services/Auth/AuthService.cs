@@ -54,8 +54,7 @@ public class AuthService : IAuthService
         user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
         _dbContext.Users.Add(user);
-
-        await _dbContext.SaveChangesAsync();
+        
 
         // теперь создаем запись в связующей таблице UserRole
         UserRole userRole = new UserRole
