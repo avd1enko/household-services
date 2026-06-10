@@ -15,8 +15,10 @@ using HouseholdServices.Infrastructure.Services.Users;
 using HouseholdServices.Infrastructure.Services.Notification;
 using HouseholdServices.Infrastructure.Services.Responses;
 using HouseholdServices.Application.Services.Request;
+using HouseholdServices.Application.Services.Reviews;
 using HouseholdServices.Infrastructure.Services.Orders;
 using HouseholdServices.Infrastructure.Services.Request;
+using HouseholdServices.Infrastructure.Services.Reviews;
 using Microsoft.OpenApi;
 
 
@@ -58,6 +60,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
@@ -129,3 +132,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
