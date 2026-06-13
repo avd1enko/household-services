@@ -55,8 +55,8 @@ public class ResponseService : IResponseService
                 masterCategory.UserId == masterId &&
                 masterCategory.CategoryId == serviceRequest.CategoryId);
 
-        if (!requestAvailableForMaster)
-            throw new RequestNotAvailableForMasterException();
+        // if (!requestAvailableForMaster)
+        //     throw new RequestNotAvailableForMasterException();
 
         bool responseExists = await _dbContext.Responses
             .AnyAsync(response => response.RequestId == requestId && response.MasterId == masterId);

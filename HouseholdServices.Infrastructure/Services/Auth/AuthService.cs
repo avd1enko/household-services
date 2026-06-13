@@ -59,7 +59,7 @@ public class AuthService : IAuthService
         // теперь создаем запись в связующей таблице UserRole
         UserRole userRole = new UserRole
         {
-            UserId = user.UserId,
+            User = user,
             RoleId = role.RoleId
         };
         _dbContext.UserRoles.Add(userRole);

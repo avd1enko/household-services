@@ -63,6 +63,16 @@ public class OrdersController : ControllerBase
             return StatusCode(StatusCodes.Status403Forbidden, exception.Message);
         }
     }
+    
+    [HttpPatch("{orderId:int}/initial-meeting")]
+    public async Task<IActionResult> UpdateInitialMeeting(
+        int orderId,
+        UpdateOrderInitialMeetingRequest request)
+    {
+        await _orderService.UpdateInitialMeetingAsync(orderId, request);
+
+        return NoContent();
+    }
 
     [HttpPatch("{orderId:int}/complete")]
     public async Task<ActionResult> CompleteOrder(int orderId)

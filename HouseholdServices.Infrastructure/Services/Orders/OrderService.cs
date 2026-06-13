@@ -126,6 +126,36 @@ public class OrderService : IOrderService
             .ToListAsync();
         return orders;
     }
+    
+    public async Task UpdateInitialMeetingAsync(int orderId, UpdateOrderInitialMeetingRequest request)
+    {
+        Order? order = await _dbContext.Orders
+            .Include(order => order.Response)
+            .ThenInclude(response => response.Request)
+            .FirstOrDefaultAsync(order => order.OrderId == orderId);
+
+        if (order == null)
+            throw new OrderNotFoundException();
+
+        int currentUserId = _currentUserService.GetUserId();
+        string currentUserRole = _currentUserService.GetRole();
+
+        bool clientHasAccess = currentUserRole == "client" && order.Response.Request.ClientId == currentUserId;
+        bool masterHasAccess = currentUserRole == "master" && order.Response.MasterId == currentUserId;
+
+        if (!clientHasAccess && !masterHasAccess)
+            throw new OrderAccessDeniedException();
+
+        if (order.OrderStatusId != 1) // in_progress
+            throw new OrderCannotBeUpdatedException();
+
+        if (request.InitialMeetingAt <= DateTime.UtcNow)
+            throw new InvalidOrderInitialMeetingDateException();
+
+        order.InitialMeetingAt = request.InitialMeetingAt;
+
+        await _dbContext.SaveChangesAsync();
+    }
 
     public async Task CompleteAsync(int orderId)
     {
