@@ -26,6 +26,7 @@ public class HouseholdServicesDbContext : DbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<OrderView> OrderViews { get; set; }
     public DbSet<MasterReviewView> MasterReviewViews { get; set; }
+    
 
     // метод, где EF Core собирает модель бд. Здесь фреймворк понимает какие есть сущности и какие их атрибуты/ограничения и тд
     // протектед так как переопределяем протектед метод

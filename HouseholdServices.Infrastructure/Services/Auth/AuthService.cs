@@ -52,7 +52,17 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
         user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+        if (role.Name == "master")
+        {
+            MasterProfile masterProfile = new MasterProfile
+            {
+                User = user,
+                Description = "",
+                ExperienceYears = 0
+            };
 
+            _dbContext.MasterProfiles.Add(masterProfile);
+        }
         _dbContext.Users.Add(user);
         
 
