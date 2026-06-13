@@ -10,12 +10,6 @@ namespace HouseholdServices.Infrastructure.Services.Orders;
 
 public class OrderService : IOrderService
 {
-    private const string ClientRoleName = "client";
-    private const string MasterRoleName = "master";
-    private const string InProgressStatusName = "in_progress";
-    private const string CompletedStatusName = "completed";
-    private const string CancelledStatusName = "cancelled";
-
     private readonly HouseholdServicesDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
 
@@ -37,8 +31,8 @@ public class OrderService : IOrderService
         int currentUserId = _currentUserService.GetUserId();
         string currentUserRole = _currentUserService.GetRole();
 
-        bool clientHasAccess = currentUserId == orderView.ClientId && currentUserRole == ClientRoleName;
-        bool masterHasAccess = currentUserId == orderView.MasterId && currentUserRole == MasterRoleName;
+        bool clientHasAccess = (currentUserId == orderView.ClientId && currentUserRole == "client");
+        bool masterHasAccess = (currentUserId == orderView.MasterId && currentUserRole == "master");
 
         if (!clientHasAccess && !masterHasAccess)
             throw new OrderAccessDeniedException();
@@ -77,7 +71,7 @@ public class OrderService : IOrderService
         int currentUserId = _currentUserService.GetUserId();
         string currentUserRole = _currentUserService.GetRole();
 
-        if (currentUserRole != ClientRoleName)
+        if (currentUserRole != "client")
             throw new OrderAccessDeniedException();
 
         List<UserOrderListItemResponse> orders = await _dbContext.OrderViews
@@ -99,7 +93,6 @@ public class OrderService : IOrderService
                 MasterLastName = order.MasterLastName
             })
             .ToListAsync();
-
         return orders;
     }
 
@@ -108,9 +101,9 @@ public class OrderService : IOrderService
         int currentUserId = _currentUserService.GetUserId();
         string currentUserRole = _currentUserService.GetRole();
 
-        if (currentUserRole != MasterRoleName)
+        if (currentUserRole != "master")
             throw new OrderAccessDeniedException();
-
+        
         List<MasterOrderListItemResponse> orders = await _dbContext.OrderViews
             .AsNoTracking()
             .Where(order => order.MasterId == currentUserId)
@@ -131,7 +124,6 @@ public class OrderService : IOrderService
                 ClientPhone = order.ClientPhone
             })
             .ToListAsync();
-
         return orders;
     }
 
@@ -148,17 +140,15 @@ public class OrderService : IOrderService
         int currentUserId = _currentUserService.GetUserId();
         string currentUserRole = _currentUserService.GetRole();
 
-        if (currentUserRole != ClientRoleName || order.Response.Request.ClientId != currentUserId)
+        if (currentUserRole != "client" || order.Response.Request.ClientId != currentUserId)
+        {
             throw new OrderAccessDeniedException();
+        }
 
-        int inProgressStatusId = await GetOrderStatusIdAsync(InProgressStatusName);
-        int completedStatusId = await GetOrderStatusIdAsync(CompletedStatusName);
-
-        if (order.OrderStatusId != inProgressStatusId)
+        if (order.OrderStatusId != 1) // not in_progress
             throw new OrderCannotBeCompletedException();
 
-        order.OrderStatusId = completedStatusId;
-        order.CompletedAt = DateTime.UtcNow;
+        order.OrderStatusId = 2; // completed
 
         await _dbContext.SaveChangesAsync();
     }
@@ -176,32 +166,20 @@ public class OrderService : IOrderService
         int currentUserId = _currentUserService.GetUserId();
         string currentUserRole = _currentUserService.GetRole();
 
-        bool clientHasAccess = currentUserRole == ClientRoleName && order.Response.Request.ClientId == currentUserId;
-        bool masterHasAccess = currentUserRole == MasterRoleName && order.Response.MasterId == currentUserId;
+        bool clientHasAccess = (currentUserRole == "client" && order.Response.Request.ClientId == currentUserId);
+        bool masterHasAccess = (currentUserRole == "master" && order.Response.MasterId == currentUserId);
 
         if (!clientHasAccess && !masterHasAccess)
+        {
             throw new OrderAccessDeniedException();
+        }
 
-        int inProgressStatusId = await GetOrderStatusIdAsync(InProgressStatusName);
-        int cancelledStatusId = await GetOrderStatusIdAsync(CancelledStatusName);
-
-        if (order.OrderStatusId != inProgressStatusId)
+        if (order.OrderStatusId != 1) // not in_progress
+        {
             throw new OrderCannotBeCancelledException();
+        }
 
-        order.OrderStatusId = cancelledStatusId;
+        order.OrderStatusId = 3; // cancelled
         await _dbContext.SaveChangesAsync();
-    }
-
-    private async Task<int> GetOrderStatusIdAsync(string statusName)
-    {
-        int statusId = await _dbContext.OrderStatuses
-            .Where(status => status.Name == statusName)
-            .Select(status => status.OrderStatusId)
-            .FirstOrDefaultAsync();
-
-        if (statusId == 0)
-            throw new OrderStatusNotFoundException();
-
-        return statusId;
     }
 }
