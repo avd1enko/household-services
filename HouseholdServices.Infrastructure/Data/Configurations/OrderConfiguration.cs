@@ -29,8 +29,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired();
 
         builder.Property(order => order.InitialMeetingAt)
-            .HasColumnName("initial_meeting_at")
-            .IsRequired();
+            .HasColumnName("initial_meeting_at");
 
         builder.Property(order => order.CreatedAt)
             .HasColumnName("created_at")
