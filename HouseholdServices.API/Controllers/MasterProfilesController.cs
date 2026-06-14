@@ -2,6 +2,9 @@ using HouseholdServices.Application.DTOs.MasterProfile;
 using HouseholdServices.Application.Services.MasterProfiles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HouseholdServices.Application.DTOs.ServiceCategories;
+using HouseholdServices.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace HouseholdServices.API.Controllers;
 
@@ -11,10 +14,12 @@ namespace HouseholdServices.API.Controllers;
 public class MasterProfilesController : ControllerBase
 {
     private readonly IMasterProfileService _masterProfileService;
+    private readonly HouseholdServicesDbContext _dbContext;
 
-    public MasterProfilesController(IMasterProfileService masterProfileService)
+    public MasterProfilesController(IMasterProfileService masterProfileService, HouseholdServicesDbContext dbContext)
     {
         _masterProfileService = masterProfileService;
+        _dbContext = dbContext;
     }
 
     [HttpGet]
@@ -43,5 +48,23 @@ public class MasterProfilesController : ControllerBase
     {
         await _masterProfileService.ReplaceCurrentCategoriesAsync(request);
         return NoContent();
+    }
+    
+    // абсолютный роут, игнорирующий установленный общий
+    [HttpGet("~/api/service-categories")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyCollection<ServiceCategoryResponse>>> GetServiceCategoriesAsync()
+    {
+        List<ServiceCategoryResponse> categories = await _dbContext.ServiceCategories
+            .AsNoTracking()
+            .OrderBy(category => category.CategoryId)
+            .Select(category => new ServiceCategoryResponse
+            {
+                CategoryId = category.CategoryId,
+                Name = category.Name
+            })
+            .ToListAsync();
+
+        return Ok(categories);
     }
 }
