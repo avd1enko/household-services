@@ -1,5 +1,7 @@
+using HouseholdServices.Application.DTOs.Notification;
 using HouseholdServices.Application.DTOs.Response;
 using HouseholdServices.Application.Exceptions.Response;
+using HouseholdServices.Application.Services.Notification;
 using HouseholdServices.Application.Services.Responses;
 using HouseholdServices.Application.Services.Users;
 using HouseholdServices.Infrastructure.Data;
@@ -19,11 +21,13 @@ public class ResponseService : IResponseService
 
     private readonly HouseholdServicesDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
+    private readonly INotificationClient _notificationClient;
 
-    public ResponseService(HouseholdServicesDbContext dbContext, ICurrentUserService currentUserService)
+    public ResponseService(HouseholdServicesDbContext dbContext, ICurrentUserService currentUserService, INotificationClient notificationClient)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
+        _notificationClient = notificationClient;
     }
 
     public async Task<ResponseForRequestListItemResponse> CreateAsync(int requestId, CreateResponseRequest request)
@@ -84,6 +88,12 @@ public class ResponseService : IResponseService
 
         _dbContext.Responses.Add(response);
         await _dbContext.SaveChangesAsync();
+
+        await _notificationClient.NotifyUserAsync(new NotificationInfoRequest
+        {
+            PhoneNumber = response.Request.Client.Phone,
+            Message = ($"New response for your request {response.Request.Title} has arrived!")
+        });
 
         return await GetResponseForRequestListItemAsync(response.ResponseId);
     }
