@@ -1,26 +1,28 @@
-using HouseholdServices.Application.Services.Auth;
-using Microsoft.EntityFrameworkCore;
-using HouseholdServices.Infrastructure.Data;
-using HouseholdServices.Infrastructure.Services.Auth;
-using HouseholdServices.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
 using System.Text;
+using HouseholdServices.Application.Services.Auth;
 using HouseholdServices.Application.Services.MasterProfiles;
 using HouseholdServices.Application.Services.Notification;
 using HouseholdServices.Application.Services.Order;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using HouseholdServices.Application.Services.Users;
-using HouseholdServices.Application.Services.Responses;
-using HouseholdServices.Infrastructure.Services.Users;
-using HouseholdServices.Infrastructure.Services.Notification;
-using HouseholdServices.Infrastructure.Services.Responses;
 using HouseholdServices.Application.Services.Request;
+using HouseholdServices.Application.Services.Responses;
 using HouseholdServices.Application.Services.Reviews;
+using HouseholdServices.Application.Services.UserProfiles;
+using HouseholdServices.Application.Services.Users;
+using HouseholdServices.Domain.Entities;
+using HouseholdServices.Infrastructure.Data;
+using HouseholdServices.Infrastructure.Services.Auth;
 using HouseholdServices.Infrastructure.Services.MasterProfiles;
+using HouseholdServices.Infrastructure.Services.Notification;
 using HouseholdServices.Infrastructure.Services.Orders;
 using HouseholdServices.Infrastructure.Services.Request;
+using HouseholdServices.Infrastructure.Services.Responses;
 using HouseholdServices.Infrastructure.Services.Reviews;
+using HouseholdServices.Infrastructure.Services.UserProfiles;
+using HouseholdServices.Infrastructure.Services.Users;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 
@@ -64,6 +66,7 @@ builder.Services.AddScoped<IRequestService, RequestService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IMasterProfileService, MasterProfileService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
