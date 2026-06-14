@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using HouseholdServices.Domain.Entities;
+using HouseholdServices.Infrastructure.Services.UserProfiles;
 
 namespace HouseholdServices.Infrastructure.Data;
 
