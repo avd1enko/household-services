@@ -93,7 +93,7 @@ public class ResponseService : IResponseService
         await _notificationClient.NotifyUserAsync(new NotificationInfoRequest
         {
             PhoneNumber = serviceRequest.Client.Phone,
-            Message = ($"New response for your request {response.Request.Title} has arrived!")
+            Message = ($"New response for your request {serviceRequest.Title} has arrived!")
         });
 
         return await GetResponseForRequestListItemAsync(response.ResponseId);
