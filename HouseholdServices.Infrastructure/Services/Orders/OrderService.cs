@@ -179,7 +179,7 @@ public class OrderService : IOrderService
             throw new OrderCannotBeCompletedException();
 
         order.OrderStatusId = 2; // completed
-
+        order.Response.Request.RequestStatusId = 3;
         await _dbContext.SaveChangesAsync();
     }
 
@@ -210,6 +210,7 @@ public class OrderService : IOrderService
         }
 
         order.OrderStatusId = 3; // cancelled
+        order.Response.Request.RequestStatusId = 4;
         await _dbContext.SaveChangesAsync();
     }
 }

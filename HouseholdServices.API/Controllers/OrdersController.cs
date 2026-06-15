@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using HouseholdServices.Application.DTOs.Order;
 using HouseholdServices.Application.Exceptions.Order;
 using HouseholdServices.Application.Services.Order;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HouseholdServices.API.Controllers;
 
 [ApiController]
 [Route("api/orders")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;
