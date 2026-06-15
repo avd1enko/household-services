@@ -41,6 +41,7 @@ public class ResponseService : IResponseService
         int masterId = _currentUserService.GetUserId();
 
         Domain.Entities.Request? serviceRequest = await _dbContext.Requests
+            .Include(request => request.Client)
             .FirstOrDefaultAsync(serviceRequest => serviceRequest.RequestId == requestId);
 
         if (serviceRequest is null)
@@ -91,7 +92,7 @@ public class ResponseService : IResponseService
 
         await _notificationClient.NotifyUserAsync(new NotificationInfoRequest
         {
-            PhoneNumber = response.Request.Client.Phone,
+            PhoneNumber = serviceRequest.Client.Phone,
             Message = ($"New response for your request {response.Request.Title} has arrived!")
         });
 
