@@ -90,11 +90,11 @@ public class ResponseService : IResponseService
         _dbContext.Responses.Add(response);
         await _dbContext.SaveChangesAsync();
 
-        await _notificationClient.NotifyUserAsync(new NotificationInfoRequest
-        {
-            PhoneNumber = serviceRequest.Client.Phone,
-            Message = ($"New response for your request {serviceRequest.Title} has arrived!")
-        });
+        // await _notificationClient.NotifyUserAsync(new NotificationInfoRequest
+        // {
+        //     PhoneNumber = serviceRequest.Client.Phone,
+        //     Message = ($"New response for your request {serviceRequest.Title} has arrived!")
+        // });
 
         return await GetResponseForRequestListItemAsync(response.ResponseId);
     }
