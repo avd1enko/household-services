@@ -34,14 +34,17 @@ function sendJson(res, statusCode, payload) {
 
 function proxyRequest(req, res, targetBase, stripPrefix = "") {
   const originalUrl = new URL(req.url || "/", `http://${HOST}:${PORT}`);
-  const requestClient = upstreamUrl.protocol === "https:" ? httpsRequest : httpRequest;
   const upstreamPath = stripPrefix
     ? originalUrl.pathname.replace(stripPrefix, "") || "/"
     : originalUrl.pathname;
+
   const upstreamUrl = new URL(
     `${upstreamPath}${originalUrl.search}`,
     targetBase
   );
+
+  const requestClient =
+    upstreamUrl.protocol === "https:" ? httpsRequest : httpRequest;
 
   const headers = { ...req.headers };
   headers.host = upstreamUrl.host;
