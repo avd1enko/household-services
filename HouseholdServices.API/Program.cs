@@ -129,8 +129,8 @@ var app = builder.Build();
 
 // сваггер будет существовать только при статусе проекта IsDevelopment. при смене статуса сваггера уже не будет
 // статус задается через перременную среды в файле api проекта launchSettings.json в поле "ASPNETCORE_ENVIRONMENT": "Development"
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     app.UseSwagger();
 
     app.UseSwaggerUI(options =>
@@ -139,7 +139,7 @@ if (app.Environment.IsDevelopment())
     });
 
 
-}
+// }
 
 app.UseHttpsRedirection();
 
