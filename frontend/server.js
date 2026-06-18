@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const PORT = Number(process.env.PORT || 5173);
 const HOST = process.env.HOST || "127.0.0.1";
-const MAIN_BACKEND = process.env.MAIN_BACKEND_URL || "http://localhost:5183";
+// const MAIN_BACKEND = process.env.MAIN_BACKEND_URL || "http://localhost:5183";
+const MAIN_BACKEND = process.env.MAIN_BACKEND_URL || "https://household-services-q5k0.onrender.com"
 const NOTIFICATION_BACKEND =
   process.env.NOTIFICATION_BACKEND_URL || "http://localhost:5333";
 
