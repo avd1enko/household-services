@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6k1Wuch0nFuGCLJhdWVPuLe3gIrw07NQqij63wcCmHnbZoGWCj08ibJVVnzbKj7
+\restrict S8Q7oxpFIab9ZztfcnCf1JDxBTFIZqdEiPveoaLfaPyqiTN61yBoQyfg3jEcaEs
 
 -- Dumped from database version 16.11 (Debian 16.11-1.pgdg13+1)
 -- Dumped by pg_dump version 16.11 (Debian 16.11-1.pgdg13+1)
@@ -124,6 +124,108 @@ $$;
 
 
 ALTER FUNCTION public.prevent_duplicate_review_per_order() OWNER TO household_user;
+
+--
+-- Name: reject_responses_when_one_accepted(); Type: FUNCTION; Schema: public; Owner: household_user
+--
+
+CREATE FUNCTION public.reject_responses_when_one_accepted() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+
+DECLARE
+   accepted_status_id INT;
+   rejected_status_id INT;
+   pending_status_id INT;
+BEGIN
+SELECT response_status_id
+INTO accepted_status_id
+FROM response_statuses
+WHERE name = 'accepted';
+
+SELECT response_status_id
+INTO rejected_status_id
+FROM response_statuses
+WHERE name = 'rejected';
+
+SELECT response_status_id
+INTO pending_status_id
+FROM response_statuses
+WHERE name = 'pending';
+
+IF NEW.response_status_id = accepted_status_id THEN
+   UPDATE responses
+   SET response_status_id = rejected_status_id
+   WHERE request_id = NEW.request_id
+   AND response_id <> NEW.response_id
+   AND response_status_id = pending_status_id;
+END IF;
+RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.reject_responses_when_one_accepted() OWNER TO household_user;
+
+--
+-- Name: set_order_completed_at_when_completed(); Type: FUNCTION; Schema: public; Owner: household_user
+--
+
+CREATE FUNCTION public.set_order_completed_at_when_completed() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    completed_status_id INT;
+BEGIN
+    SELECT order_status_id
+    INTO completed_status_id
+    FROM order_statuses
+    WHERE name = 'completed';
+
+    IF NEW.order_status_id = completed_status_id THEN
+        NEW.completed_at = NOW();
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.set_order_completed_at_when_completed() OWNER TO household_user;
+
+--
+-- Name: set_request_in_progress_when_response_accepted(); Type: FUNCTION; Schema: public; Owner: household_user
+--
+
+CREATE FUNCTION public.set_request_in_progress_when_response_accepted() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    accepted_status_id INT;
+    in_progress_status_id INT;
+BEGIN
+    SELECT response_status_id
+    INTO accepted_status_id
+    FROM response_statuses
+    WHERE name = 'accepted';
+
+    SELECT request_status_id
+    INTO in_progress_status_id
+    FROM request_statuses
+    WHERE name = 'in_progress';
+
+    IF NEW.response_status_id = accepted_status_id THEN
+        UPDATE requests
+        SET request_status_id = in_progress_status_id
+        WHERE request_id = NEW.request_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.set_request_in_progress_when_response_accepted() OWNER TO household_user;
 
 SET default_tablespace = '';
 
@@ -552,6 +654,9 @@ COPY public."__EFMigrationsHistory" ("MigrationId", "ProductVersion") FROM stdin
 20260610150849_AddMasterReviewsView	10.0.7
 20260610153315_AddReviewInsertValidationTriggers	10.0.7
 20260613104822_FixInitialMeetingAtNullable	10.0.7
+20260615115903_AddOrderCompletedAtTrigger	10.0.7
+20260615115949_AddResponseAcceptedRequestInProgressTrigger	10.0.7
+20260615122303_AddRejectResponsesWhenOneAcceptedTrigger	10.0.7
 \.
 
 
@@ -611,6 +716,7 @@ COPY public.request_statuses (request_status_id, name) FROM stdin;
 COPY public.requests (request_id, client_id, category_id, request_status_id, title, description, address, desired_date, created_at) FROM stdin;
 1	1	1	1	string	string	string	2026-06-13 09:26:46.481+00	2026-06-13 09:26:55.72675+00
 2	1	3	1	string	string	string	2026-06-13 10:33:10.307+00	2026-06-13 10:36:39.779989+00
+3	4	3	1	Помыть окна	Срочно!	Пушкина д.1	2026-06-18 11:03:00+00	2026-06-17 11:03:21.692313+00
 \.
 
 
@@ -677,6 +783,7 @@ COPY public.user_roles (user_id, role_id) FROM stdin;
 1	1
 2	2
 3	1
+4	1
 \.
 
 
@@ -688,6 +795,7 @@ COPY public.users (user_id, login, password_hash, first_name, last_name, phone, 
 1	string	AQAAAAIAAYagAAAAEP1SPHsvm/1bK9K5+QNEeWyul8oYrfHk2jC7UIH2DXx527G/TGIHmdjp8OL426L2Kw==	string	string	string	2026-06-13 09:24:56.387666+00
 2	string1	AQAAAAIAAYagAAAAEMo569l3CV43nVQ+Njig+GBJIkk2NPmSo4Y4Vt5qg38GRa/zmr+/zKlp31X/zlPjbw==	string	string	string	2026-06-13 09:25:39.885987+00
 3	string2	AQAAAAIAAYagAAAAEMzMYNlviGUXZjCoCowTAe5NINIoyhYVlGo4s2qg1q7k7CMD7mtT2KyEYPbHdezG7Q==	string	string	string	2026-06-13 09:25:54.706886+00
+4	usl	AQAAAAIAAYagAAAAEOOe0c2j5RSUG47w+bmAJ5tLQXbkZ+++WhH/UaFvB0fiX0dJ3ZPpLl1cm7gP2K7vhQ==	a	a	+7 952 748 73 46	2026-06-17 11:03:00.937308+00
 \.
 
 
@@ -716,7 +824,7 @@ SELECT pg_catalog.setval('public.request_statuses_request_status_id_seq', 5, fal
 -- Name: requests_request_id_seq; Type: SEQUENCE SET; Schema: public; Owner: household_user
 --
 
-SELECT pg_catalog.setval('public.requests_request_id_seq', 2, true);
+SELECT pg_catalog.setval('public.requests_request_id_seq', 3, true);
 
 
 --
@@ -758,7 +866,7 @@ SELECT pg_catalog.setval('public.service_categories_category_id_seq', 6, false);
 -- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: household_user
 --
 
-SELECT pg_catalog.setval('public.users_user_id_seq', 3, true);
+SELECT pg_catalog.setval('public.users_user_id_seq', 4, true);
 
 
 --
@@ -1000,6 +1108,13 @@ CREATE TRIGGER trg_create_order_after_response_accepted AFTER UPDATE ON public.r
 
 
 --
+-- Name: responses trg_reject_responses_when_one_accepted; Type: TRIGGER; Schema: public; Owner: household_user
+--
+
+CREATE TRIGGER trg_reject_responses_when_one_accepted AFTER UPDATE OF response_status_id ON public.responses FOR EACH ROW WHEN ((old.response_status_id IS DISTINCT FROM new.response_status_id)) EXECUTE FUNCTION public.reject_responses_when_one_accepted();
+
+
+--
 -- Name: reviews trg_reviews_prevent_duplicate_per_order; Type: TRIGGER; Schema: public; Owner: household_user
 --
 
@@ -1011,6 +1126,20 @@ CREATE TRIGGER trg_reviews_prevent_duplicate_per_order BEFORE INSERT ON public.r
 --
 
 CREATE TRIGGER trg_reviews_require_completed_order BEFORE INSERT ON public.reviews FOR EACH ROW EXECUTE FUNCTION public.ensure_review_order_completed();
+
+
+--
+-- Name: orders trg_set_order_completed_at_when_completed; Type: TRIGGER; Schema: public; Owner: household_user
+--
+
+CREATE TRIGGER trg_set_order_completed_at_when_completed BEFORE UPDATE OF order_status_id ON public.orders FOR EACH ROW WHEN ((old.order_status_id IS DISTINCT FROM new.order_status_id)) EXECUTE FUNCTION public.set_order_completed_at_when_completed();
+
+
+--
+-- Name: responses trg_set_request_in_progress_when_response_accepted; Type: TRIGGER; Schema: public; Owner: household_user
+--
+
+CREATE TRIGGER trg_set_request_in_progress_when_response_accepted AFTER UPDATE OF response_status_id ON public.responses FOR EACH ROW WHEN ((old.response_status_id IS DISTINCT FROM new.response_status_id)) EXECUTE FUNCTION public.set_request_in_progress_when_response_accepted();
 
 
 --
@@ -1097,5 +1226,5 @@ ALTER TABLE ONLY public.user_roles
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6k1Wuch0nFuGCLJhdWVPuLe3gIrw07NQqij63wcCmHnbZoGWCj08ibJVVnzbKj7
+\unrestrict S8Q7oxpFIab9ZztfcnCf1JDxBTFIZqdEiPveoaLfaPyqiTN61yBoQyfg3jEcaEs
 
