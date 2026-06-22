@@ -1,6 +1,8 @@
 using HouseholdServices.Application.Services.Order;
 using HouseholdServices.Application.DTOs.Order;
+using HouseholdServices.Application.DTOs.Payment;
 using HouseholdServices.Application.Services.Users;
+using HouseholdServices.Application.Services.Payment;
 using HouseholdServices.Domain.Entities;
 using HouseholdServices.Infrastructure.Data;
 using HouseholdServices.Application.Exceptions.Order;
@@ -12,11 +14,16 @@ public class OrderService : IOrderService
 {
     private readonly HouseholdServicesDbContext _dbContext;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IPaymentClient _paymentClient;
 
-    public OrderService(HouseholdServicesDbContext dbContext, ICurrentUserService currentUserService)
+    public OrderService(
+        HouseholdServicesDbContext dbContext,
+        ICurrentUserService currentUserService,
+        IPaymentClient paymentClient)
     {
         _dbContext = dbContext;
         _currentUserService = currentUserService;
+        _paymentClient = paymentClient;
     }
 
     public async Task<OrderResponse> GetByIdAsync(int orderId)
@@ -155,6 +162,39 @@ public class OrderService : IOrderService
         order.InitialMeetingAt = request.InitialMeetingAt;
 
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<PaymentStatusResponse> PayAsync(int orderId, PayOrderRequest request)
+    {
+        Order? order = await _dbContext.Orders
+            .Include(order => order.Response)
+            .ThenInclude(response => response.Request)
+            .FirstOrDefaultAsync(order => order.OrderId == orderId);
+
+        if (order == null)
+            throw new OrderNotFoundException();
+
+        int currentUserId = _currentUserService.GetUserId();
+        string currentUserRole = _currentUserService.GetRole();
+
+        if (currentUserRole != "client" || order.Response.Request.ClientId != currentUserId)
+        {
+            throw new OrderAccessDeniedException();
+        }
+
+        if (order.OrderStatusId != 1)
+        {
+            throw new OrderCannotBePaidException();
+        }
+
+        CreatePaymentRequest paymentRequest = new CreatePaymentRequest
+        {
+            OrderId = order.OrderId,
+            Amount = order.Price,
+            CardNumber = request.CardNumber
+        };
+
+        return await _paymentClient.PayAsync(paymentRequest);
     }
 
     public async Task CompleteAsync(int orderId)

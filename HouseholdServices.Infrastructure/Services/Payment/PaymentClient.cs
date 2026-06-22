@@ -16,11 +16,13 @@ public class PaymentClient : IPaymentClient
     public async Task<PaymentStatusResponse> PayAsync(CreatePaymentRequest request)
     {
         HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/payment/pay", request);
-        response.EnsureSuccessStatusCode();
 
         PaymentStatusResponse? result = await response.Content.ReadFromJsonAsync<PaymentStatusResponse>();
         if (result is null)
+        {
+            response.EnsureSuccessStatusCode();
             throw new InvalidOperationException("Payment service returned empty response");
+        }
 
         return result;
     }

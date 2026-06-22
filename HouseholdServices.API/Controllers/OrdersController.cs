@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using HouseholdServices.Application.DTOs.Order;
+using HouseholdServices.Application.DTOs.Payment;
 using HouseholdServices.Application.Exceptions.Order;
 using HouseholdServices.Application.Services.Order;
 using Microsoft.AspNetCore.Authorization;
@@ -74,6 +75,34 @@ public class OrdersController : ControllerBase
         await _orderService.UpdateInitialMeetingAsync(orderId, request);
 
         return NoContent();
+    }
+
+    [HttpPost("{orderId:int}/pay")]
+    public async Task<ActionResult<PaymentStatusResponse>> PayOrder(
+        int orderId,
+        PayOrderRequest request)
+    {
+        try
+        {
+            PaymentStatusResponse response = await _orderService.PayAsync(orderId, request);
+
+            if (response.IsPaid)
+                return Ok(response);
+
+            return BadRequest(response);
+        }
+        catch (OrderNotFoundException exception)
+        {
+            return StatusCode(StatusCodes.Status404NotFound, exception.Message);
+        }
+        catch (OrderAccessDeniedException exception)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, exception.Message);
+        }
+        catch (OrderCannotBePaidException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 
     [HttpPatch("{orderId:int}/complete")]
