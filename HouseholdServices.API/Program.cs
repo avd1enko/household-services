@@ -3,6 +3,7 @@ using HouseholdServices.Application.Services.Auth;
 using HouseholdServices.Application.Services.MasterProfiles;
 using HouseholdServices.Application.Services.Notification;
 using HouseholdServices.Application.Services.Order;
+using HouseholdServices.Application.Services.Payment;
 using HouseholdServices.Application.Services.Request;
 using HouseholdServices.Application.Services.Responses;
 using HouseholdServices.Application.Services.Reviews;
@@ -14,6 +15,7 @@ using HouseholdServices.Infrastructure.Services.Auth;
 using HouseholdServices.Infrastructure.Services.MasterProfiles;
 using HouseholdServices.Infrastructure.Services.Notification;
 using HouseholdServices.Infrastructure.Services.Orders;
+using HouseholdServices.Infrastructure.Services.Payment;
 using HouseholdServices.Infrastructure.Services.Request;
 using HouseholdServices.Infrastructure.Services.Responses;
 using HouseholdServices.Infrastructure.Services.Reviews;
@@ -70,6 +72,7 @@ builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 
 // временно (для теста)
 builder.Services.AddScoped<INotificationTestService, NotificationTestService>();
+builder.Services.AddScoped<IPaymentTestService, PaymentTestService>();
 
 // настройка JWT
 
@@ -110,6 +113,11 @@ builder.Services.AddDbContext<HouseholdServicesDbContext>(options =>
 builder.Services.AddHttpClient<INotificationClient, NotificationClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["NotificationService:BaseUrl"]!);
+});
+
+builder.Services.AddHttpClient<IPaymentClient, PaymentClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["PaymentService:BaseUrl"]!);
 });
 
 builder.Services.AddCors(options =>
