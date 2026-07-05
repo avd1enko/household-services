@@ -1,5 +1,4 @@
 # Household Services
-
 Платформа для взаимодействия клиентов и мастеров в сфере бытовых услуг
 
 ## О проекте
@@ -9,8 +8,10 @@
 После принятия отклика на его основе создаётся заказ. После завершения заказа клиент может оставить отзыв о выполненной работе
 
 ### Деплой на Render
-*Для проекта используется бесплатный хостинг. Для запуска всех сервисов проекта необходимо подождать около минуты*
-### [Household services](https://household-services-frontend.onrender.com)
+*Для проекта используется бесплатный хостинг с ограниченным функционалом. Для запуска всех сервисов проекта необходимо запустить оба сервиса, перейдя по ссылкам и подождать не более минуты*
+### 1. [Backend launch](https://household-services-q5k0.onrender.com)
+### 2. [Household services](https://household-services-frontend.onrender.com)
+*UI создан при помощи ИИ агента и нужен исключительно для демонстрации функционала серверной части приложения в более человекочитаемом виде.*
 
 
 ## Технологический стек
@@ -22,29 +23,51 @@
 - **ORM:** `Entity Framework Core`
 - **СУБД:** `PostgreSQL`
 
+## Схема БД (IDEF1X)
+![text](docs/IDEF1X.jpg)
+
+## Документация
+
+**[Техническое задание (pdf)](docs/ProjectDoc.pdf)** <br>
+**Файл технического задания включает в себя:**
+  - Описание предметной области;
+  - проектирование базы данных;
+  - функциональные требования; 
+  - usecases;
+  - проектирование API и DTO; 
+  - коды ответов.
+
+## Скриншоты интерфейса
+
+### Главная страница клиента
+![Client main](docs/screenshots/clientMain.png)
+
+### Заказы клиента
+![Client orders](docs/screenshots/clientOrders.png)
+
+### Профиль клиента
+![Client profile](docs/screenshots/clientProfile.png)
+
+### Создание заявки клиентом
+![Client request](docs/screenshots/clientReq.png)
+
+### Главная страница мастера
+![Master main](docs/screenshots/masterMain.png)
+
+### Заказы мастера
+![Master orders](docs/screenshots/masterOrders.png)
+
+### Профиль мастера
+![Master profile](docs/screenshots/masterProfile.png)
+
+### Отклики мастера
+![Master response](docs/screenshots/masterResponse.png)
+
+### Отзывы о мастере
+![Master reviews](docs/screenshots/masterReviews.png)
+
+
 ## Состав команды
 
 - **Авдиенко Данила** @avd1enko
 - **Говоров Павел** @Seztor
-
-## Документация
-
-- [Проектирование базы данных](docs/database-design.md)
-- [Функциональные требования](docs/functional-requirements.md)
-
-
-## Текущий этап разработки
-
-- ✅ Определение предметной области
-
-- ✅ Проектирование модели базы данных
-
-- ✅ Определение функциональных требований проекта
-
-- ✅ Декомпозиция проекта на этапы разработки
-
-- ✅ Перенос БД в код
-
-- ✅ Проектирование и реализация API
-  
-- 🔜 Исправление багов
